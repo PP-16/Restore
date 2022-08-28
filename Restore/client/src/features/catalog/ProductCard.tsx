@@ -12,6 +12,7 @@ import {
 import { red } from "@mui/material/colors";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Product } from "../../app/models/Product";
+import { Link } from "react-router-dom";
 
 interface Props {
   product: Product;
@@ -38,7 +39,7 @@ export default function ProductCard({ product }: Props) {
         <CardMedia
           component="img"
           alt="green iguana"
-          height="140"
+          height="100%"
           sx={{backgroundColorSize:"contain", bgcolor:"#F6F6F6"}}
           image={product.pictureUrl}
         />
@@ -52,7 +53,7 @@ export default function ProductCard({ product }: Props) {
         </CardContent>
         <CardActions>
           <Button size="small">Add to cart</Button>
-          <Button size="small">View</Button>
+          <Button size="small" component={Link} to={`/catalog/${product.id}`}>View</Button>
         </CardActions>
       </Card>
     </>

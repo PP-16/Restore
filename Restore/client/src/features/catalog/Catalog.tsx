@@ -6,6 +6,7 @@ export default function Catalog() {
   const [product,setProduct] = useState<Product[]>([])
 
   useEffect(() => {
+    console.log("PPPPPPPPP")
     fetch("http://localhost:5000/api/Product")
     .then((response)=>response.json())
     .then((data)=>setProduct(data))
