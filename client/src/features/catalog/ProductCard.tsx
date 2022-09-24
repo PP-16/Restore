@@ -16,24 +16,16 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { LoadingButton } from "@mui/lab";
 import agent from "../../app/api/agent";
-import { useStoreContext } from "../../app/context/StoreContext";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import { addBasketItemAsync, setBasket } from "../basket/basketSlice";
 
 interface Props {
   product: Product;
 }
 
 export default function ProductCard({ product }: Props) {
-  const [loading, setLoading] = useState(false);
-  const { setBasket } = useStoreContext();
-
-
-  function handleAddItem(productId:number){
-    setLoading(!loading);
-    agent.Basket.addItem(productId)
-    .then((basket) => setBasket(basket))
-    .catch((error)=>console.log(error))
-    .finally(()=>setLoading(false))
-  }
+  const { status } = useAppSelector((state) => state.basket);
+  const dispatch = useAppDispatch();
 
   return (
     <>
@@ -56,20 +48,28 @@ export default function ProductCard({ product }: Props) {
           component="img"
           alt="green iguana"
           height="100%"
-          sx={{backgroundColorSize:"contain", bgcolor:"#F6F6F6"}}
+          sx={{ backgroundColorSize: "contain", bgcolor: "#F6F6F6" }}
           image={product.pictureUrl}
         />
         <CardContent>
           <Typography gutterBottom variant="h5" component="div">
-          ฿ {(product.price/100).toFixed(2)}
+            ฿ {(product.price / 100).toFixed(2)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-           {product.brand}
+            {product.brand}
           </Typography>
         </CardContent>
         <CardActions>
-          <LoadingButton size="small" loading={loading} onClick={()=> handleAddItem(product.id)}>Add to cart</LoadingButton>
-          <Button size="small" component={Link} to={`/catalog/${product.id}`}>View</Button>
+          <LoadingButton
+            loading={status.includes("pendingAddItem" + product.id)} //includes('pending') ข้อควำมที่ต้องกำรค้นหำหรือเปรียบเทียบ
+            onClick={() =>dispatch(addBasketItemAsync({ productId: product.id }))}
+            size="small"
+          >
+            Add to cart
+          </LoadingButton>
+          <Button size="small" component={Link} to={`/catalog/${product.id}`}>
+            View
+          </Button>
         </CardActions>
       </Card>
     </>
