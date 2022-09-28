@@ -2,6 +2,7 @@ import axios, { Axios, AxiosError, AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { history } from "../..";
+import { PaginatedResponse } from "../models/pagination";
 
 axios.defaults.baseURL = "http://localhost:5000/api/"
 axios.defaults.withCredentials = true
@@ -13,7 +14,12 @@ const sleep = () => new Promise(_ => setTimeout(_, 250))
 
 axios.interceptors.response.use(async response => {
     await sleep()
-    return response
+    const pagination = response.headers['pagination']; //ส่งมำจำก ProductController
+    if (pagination) {
+        response.data = new PaginatedResponse(response.data, JSON.parse(pagination));
+        return response;
+    }
+    return response;
 }, (error: AxiosError) => {
     var data = error.response?.data!
 
@@ -43,7 +49,7 @@ axios.interceptors.response.use(async response => {
             toast.error(result.title)
             break;
         case 500:
-            history.push('/server-error',{state:data})
+            history.push('/server-error', { state: data })
             toast.error(result.title)
             break;
 
@@ -53,16 +59,17 @@ axios.interceptors.response.use(async response => {
 
 })
 const requests = {
-    get: (url: string) => axios.get(url).then(ResponseBody),
-    post: (url: string,body={}) => axios.post(url,body).then(ResponseBody),
+    get: (url: string, params?: URLSearchParams) => axios.get(url, { params }).then(ResponseBody),
+    post: (url: string, body = {}) => axios.post(url, body).then(ResponseBody),
     delete: (url: string) => axios.delete(url).then(ResponseBody)
 
 
 }
 
 const Catalog = {
-    list: () => requests.get("Product"),
+    list: (params: URLSearchParams) => requests.get('product', params),
     details: (id: number) => requests.get(`product/${id}`),
+    fetchFilters: () => requests.get('Product/filters'),
 }
 
 const TestErrors = {
@@ -74,10 +81,10 @@ const TestErrors = {
 }
 
 const Basket = {
-    get:()=>requests.get('Basket'),
-    addItem: (productId:number,quantity=1)=>requests.post(`basket?productId=${productId}&quantity=${quantity}`,{}),
-    removeItem: (productId: number, quantity = 1) =>requests.delete(`basket?productId=${productId}&quantity=${quantity}`)
-    
+    get: () => requests.get('Basket'),
+    addItem: (productId: number, quantity = 1) => requests.post(`basket?productId=${productId}&quantity=${quantity}`, {}),
+    removeItem: (productId: number, quantity = 1) => requests.delete(`basket?productId=${productId}&quantity=${quantity}`)
+
 
 }
 
