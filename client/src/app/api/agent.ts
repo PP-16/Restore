@@ -3,11 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { history } from "../..";
 import { PaginatedResponse } from "../models/pagination";
+import { store } from "../store/configureStore";
 
 axios.defaults.baseURL = "http://localhost:5000/api/"
 axios.defaults.withCredentials = true
 
 const ResponseBody = (response: AxiosResponse) => response.data
+
+//แนบ token ไปกับ Header
+axios.interceptors.request.use((config: any) => {
+    const token = store.getState().account.user?.token; //เรียกใช้ State โดยตรง
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+})
+
 
 const sleep = () => new Promise(_ => setTimeout(_, 250))
 
@@ -66,6 +75,13 @@ const requests = {
 
 }
 
+const Account = {
+    login: (values: any) => requests.post('account/login', values),
+    register: (values: any) => requests.post('account/register', values),
+    currentUser: () => requests.get('account/currentUser'),
+}
+
+
 const Catalog = {
     list: (params: URLSearchParams) => requests.get('product', params),
     details: (id: number) => requests.get(`product/${id}`),
@@ -91,6 +107,7 @@ const Basket = {
 const agent = {
     Catalog,
     TestErrors,
-    Basket
+    Basket,
+    Account
 }
 export default agent;

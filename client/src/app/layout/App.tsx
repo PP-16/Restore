@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@emotion/react";
 import { Container, createTheme, CssBaseline } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import AboutPage from "../../features/about/AboutPage";
 import Catalog from "../../features/catalog/Catalog";
@@ -11,9 +11,6 @@ import Header from "./Header";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import ServerError from "../errors/ServerError";
-import { useStoreContext } from "../context/StoreContext";
-import { getCookie } from "../util/util";
-import agent from "../api/agent";
 import LoadingComponent from "./LoadingComponent";
 import BasketPage from "../../features/basket/BasketPage";
 import CheckoutPage from "../../features/checkout/CheckoutPage";
@@ -21,7 +18,11 @@ import HomePage from "../../features/home/HomePage";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useAppDispatch, useAppSelector } from "../store/configureStore";
-import { setBasket } from "../../features/basket/basketSlice";
+import { fetchBasketAsync } from "../../features/basket/basketSlice";
+import Login from "../../features/account/Login";
+import Register from "../../features/account/Register";
+import { fetchCurrentUser } from "../../features/account/accountSlice";
+import { PrivateLogin, PrivateRoute } from "./PrivateRoute";
 
 export default function App() {
   // const { setBasket } = useStoreContext(); //ควบคุมสเตทด้วย React context to Centralize
@@ -29,15 +30,18 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const { fullscreen } = useAppSelector((state) => state.screen);
 
-  useEffect(() => {
-    const buyerId = getCookie("buyerId");
-    if (buyerId) {
-      agent.Basket.get()
-        .then((basket) => dispatch(setBasket(basket)))
-        .catch((error) => console.log(error))
-        .finally(() => setLoading(false));
-    } else setLoading(false);
+  const initApp = useCallback(async () => {
+    try {
+      await dispatch(fetchCurrentUser());
+      await dispatch(fetchBasketAsync());
+    } catch (error) {
+      console.log(error);
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    initApp().then(() => setLoading(false));
+  }, [initApp]);
 
   const [mode, setMode] = useState(false);
   const displayMode = mode ? "light" : "dark";
@@ -67,7 +71,11 @@ export default function App() {
         />
         <CssBaseline />
         <Header handleMode={handleMode} />
-        {fullscreen ? <>{mainroute}</> : <Container sx={{mt:2}}>{mainroute}</Container>}
+        {fullscreen ? (
+          <>{mainroute}</>
+        ) : (
+          <Container sx={{ mt: 2 }}>{mainroute}</Container>
+        )}
       </ThemeProvider>
     </>
   );
@@ -81,8 +89,13 @@ const mainroute = (
     <Route path="/Catalog" element={<Catalog />} />
     <Route path="/Catalog/:id" element={<ProductDetails />} />
     <Route path="/basket" element={<BasketPage />} />
-    <Route path="/checkout" element={<CheckoutPage />} />
+    <Route path="/register" element={<Register />} />
     <Route path="*" element={<NotFound />} />
     <Route path="/server-error" element={<ServerError />} />
+
+    <Route path="/login" element={<PrivateLogin><Login /></PrivateLogin>}/>
+    <Route element={<PrivateRoute />}>
+      <Route path="/checkout" element={<CheckoutPage />} />
+    </Route>
   </Routes>
 );
