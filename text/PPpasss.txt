@@ -3,3 +3,21 @@ Ploy123//
 
 admin
 Pa$$w0rd
+
+Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiIxMjNAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IlBQYWRtaW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJNZW1iZXIiLCJleHAiOjE2NjUyODkzMDZ9.tfhAAI3UMS65v4QXElMhOTL-W3GkvxI2mwz2tP-Z-uKJZfGbPfcb09Uvx3ObAkfNDxAgwqh2BKiMOKOBszlHPQ 
+
+
+{
+  "saveAddress": true,
+  "shippingAddress": {
+    "fullName": "PP",
+    "address1": "test address1",
+    "address2": "test address2",
+    "city": "test city",
+    "state": "teststate",
+    "zip": "123456",
+    "country": "test country"
+  }
+}
+
+

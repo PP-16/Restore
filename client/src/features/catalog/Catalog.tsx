@@ -1,8 +1,8 @@
 import { Grid, Paper } from "@mui/material";
 import { useEffect } from "react";
-import AppPagination from "../../app/api/components/AppPagination";
-import CheckboxButtons from "../../app/api/components/CheckboxButtons";
-import RadioButtonGroup from "../../app/api/components/RadioButtonGroup";
+import AppPagination from "../../app/components/AppPagination";
+import CheckboxButtons from "../../app/components/CheckboxButtons";
+import RadioButtonGroup from "../../app/components/RadioButtonGroup";
 import LoadingComponent from "../../app/layout/LoadingComponent";
 import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
 import {
