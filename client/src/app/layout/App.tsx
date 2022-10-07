@@ -24,6 +24,7 @@ import Register from "../../features/account/Register";
 import { fetchCurrentUser } from "../../features/account/accountSlice";
 import { PrivateLogin, PrivateRoute } from "./PrivateRoute";
 import OrderPage from "../../features/orders/OrderPage";
+import CheckoutWrapper from "../../features/checkout/CheckoutWrapper";
 
 export default function App() {
   // const { setBasket } = useStoreContext(); //ควบคุมสเตทด้วย React context to Centralize
@@ -85,7 +86,6 @@ export default function App() {
 const mainroute = (
   <Routes>
     <Route path="/" element={<HomePage />} />
-    <Route path="/Contact" element={<ContactPage />} />
     <Route path="/About" element={<AboutPage />} />
     <Route path="/Catalog" element={<Catalog />} />
     <Route path="/Catalog/:id" element={<ProductDetails />} />
@@ -94,10 +94,18 @@ const mainroute = (
     <Route path="*" element={<NotFound />} />
     <Route path="/server-error" element={<ServerError />} />
 
-    <Route path="/login" element={<PrivateLogin><Login /></PrivateLogin>}/>
+    <Route
+      path="/login"
+      element={
+        <PrivateLogin>
+          <Login />
+        </PrivateLogin>
+      }
+    />
     <Route element={<PrivateRoute />}>
-      <Route path="/checkout" element={<CheckoutPage />} />
-      <Route path="/order" element={<OrderPage/>}/>
+      <Route path="/Contact" element={<ContactPage />} />
+      <Route path="/checkout" element={<CheckoutWrapper />} />
+      <Route path="/order" element={<OrderPage />} />
     </Route>
   </Routes>
 );
