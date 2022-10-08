@@ -50,16 +50,50 @@ builder.Services.AddSwaggerGen(c =>
 #endregion
 
 
-builder.Services.AddDbContext<StoreContext>(opt=>{
-opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+#region เชื่อมต่อไปยัง heroku Server และใช้ค่าที่ config ไว้แล้วในฝั่ง Heroku
+        builder.Services.AddDbContext<StoreContext>(options =>
+        {
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            string connStr;
+
+            if (env == "Development")
+            {
+                // Use connection string from file.
+                connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+            }
+            else
+            {
+                // Use connection string provided at runtime by Heroku.
+                var connUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+                // Parse connection URL to connection string for Npgsql
+                connUrl = connUrl.Replace("postgres://", string.Empty);
+                var pgUserPass = connUrl.Split("@")[0];
+                var pgHostPortDb = connUrl.Split("@")[1];
+                var pgHostPort = pgHostPortDb.Split("/")[0];
+                var pgDb = pgHostPortDb.Split("/")[1];
+                var pgUser = pgUserPass.Split(":")[0];
+                var pgPass = pgUserPass.Split(":")[1];
+                var pgHost = pgHostPort.Split(":")[0];
+                var pgPort = pgHostPort.Split(":")[1];
+
+                connStr = $"Server={pgHost};Port={pgPort};User Id={pgUser};Password={pgPass};Database={pgDb};SSL Mode=Require;Trust Server Certificate=true";
+            }
+
+        // Whether the connection string came from the local development configuration file
+        // or from the environment variable from Heroku, use it to set up your DbContext.
+        options.UseNpgsql(connStr);
+    });
+#endregion
+
 
 #region Cors
-var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy  =>
+                      policy =>
                       {
                           policy.AllowAnyHeader()
                           .AllowAnyMethod()
@@ -69,6 +103,7 @@ builder.Services.AddCors(options =>
 });
 #endregion
 #region Identityสร้างเซอร์วิส User,Role (ระวังการเรียงลำดับ)
+
 builder.Services.AddIdentityCore<User>(opt =>
 {
     opt.User.RequireUniqueEmail = true;
@@ -91,7 +126,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                                    .GetBytes(builder.Configuration["JWTSettings:TokenKey"]))
                            };
                        });
-                       
+
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<TokenService>();
@@ -111,12 +146,12 @@ var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 try
 {
-await context.Database.MigrateAsync(); //สร้ำง DB ให้อัตโนมัติถ้ำยังไม่มี
-await DbInitializer.Initialize(context, userManager); //สร้ำงข้อมูลสินค้ำจ ำลอง
+    await context.Database.MigrateAsync(); //สร้ำง DB ให้อัตโนมัติถ้ำยังไม่มี
+    await DbInitializer.Initialize(context, userManager); //สร้ำงข้อมูลสินค้ำจ ำลอง
 }
 catch (Exception ex)
 {
-logger.LogError(ex, "Problem migrating data");
+    logger.LogError(ex, "Problem migrating data");
 }
 #endregion
 
@@ -130,10 +165,14 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection();
 
 #region ส่ง error ไปให้ Axios ตอนทำ Interceptor
-  app.UseMiddleware<ExceptionMiddleware>(); 
+app.UseMiddleware<ExceptionMiddleware>();
 #endregion
 
-app.UseRouting();
+app.UseRouting(); //ระวังต้องใช้ตัวนี้ มิฉนั้นตอน deploy รันไม่ได้
+
+app.UseDefaultFiles(); // อนุญาตให้เรียกไฟล์ต่างๆ ใน wwwroot
+app.UseStaticFiles();  // อนุญาตให้เข้าถึงไฟล์ค่าคงที่ได้
+
 
 app.UseCors(MyAllowSpecificOrigins);
 
@@ -141,6 +180,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapFallbackToController("Index", "Fallback");
+});
+
 
 await app.RunAsync();
