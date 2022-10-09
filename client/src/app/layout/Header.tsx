@@ -38,12 +38,12 @@ const navStyles = {
 
 export default function Header(props: any) {
   const { user } = useAppSelector((state) => state.account);
-  const {basket}= useAppSelector(state=>state.basket)
-  
+  const { basket } = useAppSelector((state) => state.basket);
+
   const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Box sx={{ flexGrow: 1}}>
+    <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar
           sx={{
@@ -67,12 +67,7 @@ export default function Header(props: any) {
               />
             </IconButton>
 
-            <Typography
-              variant="h6"
-              sx={navStyles}
-              component={Link}
-              to="/"
-            >
+            <Typography variant="h6" sx={navStyles} component={Link} to="/">
               PP-Restore
             </Typography>
           </Box>
@@ -88,6 +83,11 @@ export default function Header(props: any) {
                 {title}
               </ListItem>
             ))}
+            {user && user.roles?.includes("Admin") && (
+              <ListItem component={NavLink} to={"/inventory"} sx={navStyles}>
+                INVENTORY
+              </ListItem>
+            )}
           </List>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -102,7 +102,9 @@ export default function Header(props: any) {
                 <ShoppingCart />
               </Badge>
             </IconButton>
-            {user ? (<SignedinMenu />) : (
+            {user ? (
+              <SignedinMenu />
+            ) : (
               <List sx={{ display: "flex" }}>
                 {rightLinks.map(({ title, path }) => (
                   <ListItem
@@ -116,7 +118,6 @@ export default function Header(props: any) {
                 ))}
               </List>
             )}
-
           </Box>
         </Toolbar>
       </AppBar>
