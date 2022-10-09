@@ -1,5 +1,4 @@
-import axios, { Axios, AxiosError, AxiosResponse } from "axios";
-import { useNavigate } from "react-router-dom";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { history } from "../..";
 import { PaginatedResponse } from "../models/pagination";
@@ -22,7 +21,7 @@ const sleep = () => new Promise(_ => setTimeout(_, 250))
 
 
 axios.interceptors.response.use(async response => {
-    if(process.env.NODE_ENV === 'development')  await sleep()
+    if (process.env.NODE_ENV === 'development') await sleep()
     const pagination = response.headers['pagination']; //ส่งมำจำก ProductController
     if (pagination) {
         response.data = new PaginatedResponse(response.data, JSON.parse(pagination));
@@ -46,13 +45,14 @@ axios.interceptors.response.use(async response => {
                 }
                 throw modelStateErrors.flat();
             }
-
-
             toast.error(result.title)
             console.log(result)
             break;
         case 401:
             toast.error(result.title)
+            break;
+        case 403:
+            toast.error('You are not allowed to do that!')
             break;
         case 404:
             toast.error(result.title)
@@ -70,8 +70,13 @@ axios.interceptors.response.use(async response => {
 const requests = {
     get: (url: string, params?: URLSearchParams) => axios.get(url, { params }).then(ResponseBody),
     post: (url: string, body = {}) => axios.post(url, body).then(ResponseBody),
-    delete: (url: string) => axios.delete(url).then(ResponseBody)
-
+    delete: (url: string) => axios.delete(url).then(ResponseBody),
+    postForm: (url: string, data: FormData) => axios.post(url, data, {
+        headers: { 'Content-type': 'multipart/form-data' }   //มันคือpath form ต้องใส่นะ
+    }).then(ResponseBody),
+    putForm: (url: string, data: FormData) => axios.put(url, data, {
+        headers: { 'Content-type': 'multipart/form-data' }
+    }).then(ResponseBody)
 
 }
 const Orders = {
@@ -115,12 +120,28 @@ const Basket = {
 
 }
 
+function createFormData(item: any) {
+    let formData = new FormData();
+    for (const key in item) {
+        formData.append(key, item[key])
+    }
+    return formData;
+}
+
+const Admin = {
+    createProduct: (product: any) => requests.postForm('product', createFormData(product)),
+    updateProduct: (product: any) => requests.putForm('product', createFormData(product)),
+    deleteProduct: (id: number) => requests.delete(`product/${id}`)
+}
+
+
 const agent = {
     Catalog,
     TestErrors,
     Basket,
     Account,
     Orders,
-    Payments
+    Payments,
+    Admin
 }
 export default agent;
